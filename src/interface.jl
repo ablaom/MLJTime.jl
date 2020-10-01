@@ -71,7 +71,8 @@ function MMI.predict(m::TimeSeriesForestClassifier, fitresult, Xnew)
     forest, intervals, classes_seen, integers_seen = fitresult
     scores = IBF.predict_new(Xmatrix, forest, intervals, integers_seen)
     sm_scores = smooth(scores)
-    return MMI.UnivariateFinite(classes_seen, sm_scores)
+    return [MMI.UnivariateFinite(classes_seen, sm_scores[i, :])
+                   for i in 1:size(sm_scores, 1)]
 end
 
 function smooth(X)
@@ -122,7 +123,7 @@ end
 function MMI.predict(m::TimeSeriesKNNClassifier, fitresult, Xnew)
     Xmatrix_new = MMI.matrix(Xnew)
     Xmatrix, yplain, classes_seen, integers_seen = fitresult
-    y_pred, DistanceMatrix = Predict_new(m, Xmatrix, Xmatrix_new, yplain)
+    y_pred, DistanceMatrix = Predict_new(m, Xmatrix, Xmatrix_new, yplain) 
     a, b = length(y_pred), length(integers_seen)
     probas = zeros(a, b)
     for i=1:a
@@ -130,7 +131,8 @@ function MMI.predict(m::TimeSeriesKNNClassifier, fitresult, Xnew)
             probas[i,j] = Int(y_pred[i]) == j ? 1 : 0
         end
     end
-    return  MMI.UnivariateFinite(classes_seen, probas)
+    return  [MMI.UnivariateFinite(classes_seen, probas[i, :])
+                for i in 1:size(probas, 1)]
 end
 
 # MMI.fitted_params(::TimeSeriesKNNClassifier, fitresult) 
